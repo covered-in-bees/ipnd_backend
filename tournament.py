@@ -113,6 +113,9 @@ def swissPairings():
     player with an equal or nearly-equal win record, that is, a player adjacent
     to him or her in the standings.
 
+    If there is an odd number of players, the lowest in standing will recieve a
+    bye, which is automatically reported.
+
     Returns:
       A list of tuples, each of which contains (id1, name1, id2, name2)
         id1: the first player's unique id
@@ -123,12 +126,13 @@ def swissPairings():
     standings=playerStandings()
     id_index=0
     name_index=1
-    #pairs players based on standing, pairing the top two , 3rd and 4th, and so on.
+    player_count=countPlayers()
+    #pairs players based on standing, pairing the top two , 3rd and 4th, etc.
     pairings=[(standings[x-1][id_index], standings[x-1][name_index],
                 standings[x][id_index], standings[x][name_index])
-                for x in range(countPlayers()) if x%2==1]
-    if countPlayers()%2==1:
-        pairings.append((standings[countPlayers()-1][id_index],
-                        standings[countPlayers()-1][name_index], 0, 'BYE'))
-        reportMatch(standings[countPlayers()-1][id_index], 0)
+                for x in range(player_count) if x%2==1]
+    if player_count%2==1:
+        pairings.append((standings[player_count-1][id_index],
+                        standings[player_count-1][name_index], 0, 'BYE'))
+        reportMatch(standings[player_count-1][id_index], 0)
     return pairings
