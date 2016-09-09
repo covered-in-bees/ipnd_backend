@@ -30,11 +30,19 @@ def deletePlayers():
     DB.commit()
     DB.close()
 
+def dropPlayer(player_id):
+    """Remove one player from the tournament, but maintain thier match history"""
+    DB = connect()
+    c = DB.cursor()
+    c.execute("DELETE FROM records WHERE id = %d" % int(player_id))
+    DB.commit()
+    DB.close()
+
 def countPlayers():
     """Returns the number of players currently registered."""
     DB = connect()
     c = DB.cursor()
-    c.execute("SELECT count(*) as num FROM players")
+    c.execute("SELECT count(*) as num FROM records")
     for row in c.fetchall():
         return row[0]
 
@@ -72,7 +80,7 @@ def playerStandings():
     DB = connect()
     c = DB.cursor()
     c.execute ("""SELECT players.id, players.name, wins, matches FROM players
-                LEFT JOIN records ON records.id = players.id ORDER BY wins DESC""")
+                JOIN records ON records.id = players.id ORDER BY wins DESC""")
 
     standings = [(row[0], row[1], row[2], row[3]) for row in c.fetchall()]
     return standings
@@ -113,11 +121,14 @@ def swissPairings():
         name2: the second player's name
     """
     standings=playerStandings()
+    id_index=0
+    name_index=1
     #pairs players based on standing, pairing the top two , 3rd and 4th, and so on.
-    pairings=[(standings[x-1][0], standings[x-1][1], standings[x][0],
-                standings[x][1]) for x in range(countPlayers()) if x%2==1]
+    pairings=[(standings[x-1][id_index], standings[x-1][name_index],
+                standings[x][id_index], standings[x][name_index])
+                for x in range(countPlayers()) if x%2==1]
     if countPlayers()%2==1:
-        pairings.append((standings[countPlayers()-1][0],
-                        standings[countPlayers()-1][1], 0, 'BYE'))
-        reportMatch(standings[countPlayers()-1][0], 0)
+        pairings.append((standings[countPlayers()-1][id_index],
+                        standings[countPlayers()-1][name_index], 0, 'BYE'))
+        reportMatch(standings[countPlayers()-1][id_index], 0)
     return pairings
