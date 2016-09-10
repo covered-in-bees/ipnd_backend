@@ -9,16 +9,16 @@ Execute the test with the command:
 
 <h3>usage</h3>
 Use the `registerPlayer` method to sign players up for your tournament using the syntax:
-`tournament.registerPlayer('<player's name>')`
+```tournament.registerPlayer('<player's name>')```
 This will automatically generate a unique id for the player.
 
 `swissPairings` generates pairings.
 The results should be reported via the `reportMatch` method, with the syntax:
-`tournament.reportMatch(<winner's id>,<loser's id>)`
+```tournament.reportMatch(<winner's id>,<loser's id>)```
 Note that any byes are automatically reported.
 
 If a player drops from a tournement, use the `dropPlayer` method using the syntax:
-`tournament.dropPlayer(<player's id>)`.
+```tournament.dropPlayer(<player's id>)```
 
 `deleteMatches` deletes all match records, and thus resets the standings.
 `deletePlayers` will delete all players and their matches from the database.
