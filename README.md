@@ -10,11 +10,13 @@ Execute the test with the command:
 ###usage
 Use the `registerPlayer` method to sign players up for your tournament using the syntax:
 >```tournament.registerPlayer('<player's name>')```
+
 This will automatically generate a unique id for the player.
 
 `swissPairings` generates pairings.
 The results should be reported via the `reportMatch` method, with the syntax:
 >```tournament.reportMatch(<winner's id>,<loser's id>)```
+
 Note that any byes are automatically reported.
 
 If a player drops from a tournement, use the `dropPlayer` method using the syntax:
