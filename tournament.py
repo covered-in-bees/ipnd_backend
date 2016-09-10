@@ -4,7 +4,6 @@
 #
 
 import psycopg2
-import bleach
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -16,16 +15,14 @@ def deleteMatches():
     DB = connect()
     c = DB.cursor()
     c.execute("DELETE FROM matches")
-    c.execute("UPDATE records SET wins = 0, matches = 0")
     DB.commit()
     DB.close()
 
 def deletePlayers():
-    """Remove all the player (and thus match) records from the database."""
+    """Remove all the player (and thus, match) records from the database."""
     deleteMatches()
     DB = connect()
     c = DB.cursor()
-    c.execute("DELETE FROM records")
     c.execute("DELETE FROM players")
     DB.commit()
     DB.close()
@@ -34,7 +31,7 @@ def dropPlayer(player_id):
     """Remove one player from the tournament, but maintain thier match history"""
     DB = connect()
     c = DB.cursor()
-    c.execute("DELETE FROM records WHERE id = %d" % int(player_id))
+    c.execute("DELETE FROM players WHERE id = %s" % (int(player_id),))
     DB.commit()
     DB.close()
 
@@ -42,7 +39,7 @@ def countPlayers():
     """Returns the number of players currently registered."""
     DB = connect()
     c = DB.cursor()
-    c.execute("SELECT count(*) as num FROM records")
+    c.execute("SELECT count(*) as num FROM players")
     for row in c.fetchall():
         return row[0]
 
@@ -55,14 +52,12 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-    text = str(bleach.clean(name))
+    text = str(name)
     DB = connect()
     c = DB.cursor()
     c.execute ("INSERT INTO players (name) VALUES (%s)", (text,))
-    c.execute ("INSERT INTO records (id, wins, matches) VALUES (lastval(), 0, 0)")
     DB.commit()
     DB.close()
-
 
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -79,10 +74,14 @@ def playerStandings():
     """
     DB = connect()
     c = DB.cursor()
-    c.execute ("""SELECT players.id, players.name, wins, matches FROM players
-                JOIN records ON records.id = players.id ORDER BY wins DESC""")
+    c.execute ("""SELECT players.id, name, max(wins) as wins,
+                max(wins+losses) as matches
+                FROM players
+                JOIN wincount on players.id=wincount.id
+                JOIN losscount on players.id=losscount.id
+                GROUP BY players.id ORDER BY wins DESC""")
 
-    standings = [(row[0], row[1], row[2], row[3]) for row in c.fetchall()]
+    standings = [(row[0], row[1], int(row[2]), int(row[3])) for row in c.fetchall()]
     return standings
 
 def reportMatch(winner, loser , draw='n'):
@@ -97,11 +96,9 @@ def reportMatch(winner, loser , draw='n'):
     #the following line is in place to facilitate future implementation of
     #draws and avoiding rematches in the bracket. It also conveniently reports
     #match history.
+
     c.execute ("""INSERT INTO matches (winner, loser, draw)
-                VALUES (%d,%d,'%s')""" % (winner, loser, draw))
-    c.execute ("UPDATE records SET wins=COALESCE(wins,0)+1 WHERE id = %d" % winner)
-    c.execute ("""UPDATE records SET matches=COALESCE(matches,0)+1
-                WHERE id = %d OR id = %d""" % (winner, loser))
+                VALUES (%s, %s, %s)""", ((winner,), (loser,), (draw,)))
     DB.commit()
     DB.close()
 
