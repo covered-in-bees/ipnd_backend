@@ -31,7 +31,7 @@ def dropPlayer(player_id):
     """Remove one player from the tournament, but maintain thier match history"""
     DB = connect()
     c = DB.cursor()
-    c.execute("DELETE FROM players WHERE id = %s" % (int(player_id),))
+    c.execute("DELETE FROM players WHERE id = %s", (int(player_id),))
     DB.commit()
     DB.close()
 
@@ -98,7 +98,7 @@ def reportMatch(winner, loser , draw='n'):
     #match history.
 
     c.execute ("""INSERT INTO matches (winner, loser, draw)
-                VALUES (%s, %s, %s)""", ((winner,), (loser,), (draw,)))
+                VALUES (%s, %s, %s)""", (winner, loser, draw))
     DB.commit()
     DB.close()
 
